@@ -1,0 +1,58 @@
+from collections import deque
+
+def is_goal(state):
+    return state[0] == 2  # Goal: 2 liters in Jug A
+
+def get_successors(state):
+    a, b = state
+    successors = []
+
+    maxA, maxB = 4, 3  # Capacities
+
+    # Fill jug A or B
+    successors.append((maxA, b))
+    successors.append((a, maxB))
+
+    # Empty jug A or B
+    successors.append((0, b))
+    successors.append((a, 0))
+
+    # Pour A → B
+    pour = min(a, maxB - b)
+    successors.append((a - pour, b + pour))
+
+    # Pour B → A
+    pour = min(b, maxA - a)
+    successors.append((a + pour, b - pour))
+
+    return successors
+
+def bfs(start):
+    queue = deque([(start, [start])])
+    visited = set()
+
+    while queue:
+        state, path = queue.popleft()
+
+        if state in visited:
+            continue
+        visited.add(state)
+
+        if is_goal(state):
+            return path
+
+        for succ in get_successors(state):
+            if succ not in visited:
+                queue.append((succ, path + [succ]))
+
+    return None
+
+# Run BFS
+solution = bfs((0, 0))
+
+if solution:
+    print("Solution path using BFS:")
+    for step in solution:
+        print(f"Jug A: {step[0]}L, Jug B: {step[1]}L")
+else:
+    print("No solution found.")

@@ -1,0 +1,58 @@
+# Water Jug Problem using DFS (4-liter and 3-liter jugs)
+def is_goal(state):
+    return state[0] == 2  # Goal: 2 liters in Jug A
+
+def get_successors(state):
+    a, b = state
+    successors = []
+
+    # Jug capacities
+    maxA, maxB = 4, 3
+
+    # Fill jug A or B
+    successors.append((maxA, b))
+    successors.append((a, maxB))
+
+    # Empty jug A or B
+    successors.append((0, b))
+    successors.append((a, 0))
+
+    # Pour A -> B
+    pour = min(a, maxB - b)
+    successors.append((a - pour, b + pour))
+
+    # Pour B -> A
+    pour = min(b, maxA - a)
+    successors.append((a + pour, b - pour))
+
+    return successors
+
+def dfs(start):
+    stack = [(start, [start])]
+    visited = set()
+
+    while stack:
+        (state, path) = stack.pop()
+
+        if state in visited:
+            continue
+        visited.add(state)
+
+        if is_goal(state):
+            return path
+
+        for succ in get_successors(state):
+            if succ not in visited:
+                stack.append((succ, path + [succ]))
+
+    return None
+
+# Initial state: both jugs are empty
+solution = dfs((0, 0))
+
+if solution:
+    print("Solution path:")
+    for step in solution:
+        print(f"Jug A: {step[0]}L, Jug B: {step[1]}L")
+else:
+    print("No solution found.")

@@ -1,0 +1,65 @@
+import heapq
+
+ROW = 5
+COL = 5
+
+# Directions: up, down, left, right
+dx = [-1, 1, 0, 0]
+dy = [0, 0, -1, 1]
+
+# Heuristic: Manhattan Distance
+def heuristic(x1, y1, x2, y2):
+    return abs(x1 - x2) + abs(y1 - y2)
+
+# Node class for the priority queue
+class Node:
+    def __init__(self, x, y, cost):
+        self.x = x
+        self.y = y
+        self.cost = cost
+
+    def __lt__(self, other):
+        return self.cost < other.cost
+
+# Best First Search Algorithm
+def best_first_search(grid, startX, startY, goalX, goalY):
+    visited = [[False for _ in range(COL)] for _ in range(ROW)]
+    pq = []
+    heapq.heappush(pq, Node(startX, startY, heuristic(startX, startY, goalX, goalY)))
+
+    print("Path:")
+    while pq:
+        current = heapq.heappop(pq)
+
+        if visited[current.x][current.y]:
+            continue
+
+        visited[current.x][current.y] = True
+        print(f"({current.x}, {current.y})", end=" -> ")
+
+        if current.x == goalX and current.y == goalY:
+            print("\nReached Goal!")
+            return
+
+        for i in range(4):
+            nx = current.x + dx[i]
+            ny = current.y + dy[i]
+
+            if 0 <= nx < ROW and 0 <= ny < COL and grid[nx][ny] == 0 and not visited[nx][ny]:
+                heapq.heappush(pq, Node(nx, ny, heuristic(nx, ny, goalX, goalY)))
+
+    print("\nGoal not reachable!")
+
+# Main execution
+if __name__ == "__main__":
+    grid = [
+        [0, 0, 1, 0, 0],
+        [1, 0, 1, 0, 1],
+        [0, 0, 0, 1, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0]
+    ]
+    startX, startY = 0, 0
+    goalX, goalY = 4, 4
+
+    best_first_search(grid, startX, startY, goalX, goalY)

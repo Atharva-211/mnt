@@ -1,0 +1,1360 @@
+Implement Non-AI Techniques for the following
+problems:
+a. Tic Tac Toe
+
+def print_board(board):
+    for row in board:
+        print(" | ".join(row))
+        print("-" * 5)
+
+def check_winner(board, player):
+    # Check rows, columns, and diagonals
+    for i in range(3):
+        if all([cell == player for cell in board[i]]): return True
+        if all([board[j][i] == player for j in range(3)]): return True
+    if all([board[i][i] == player for i in range(3)]): return True
+    if all([board[i][2 - i] == player for i in range(3)]): return True
+    return False
+
+def is_full(board):
+    return all(cell in ['X', 'O'] for row in board for cell in row)
+
+def play_tic_tac_toe():
+    board = [['1','2','3'], ['4','5','6'], ['7','8','9']]
+    current_player = 'X'
+    
+    while True:
+        print_board(board)
+        move = input(f"Player {current_player}, enter your move (1-9): ")
+        
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == move:
+                    board[i][j] = current_player
+                    if check_winner(board, current_player):
+                        print_board(board)
+                        print(f"Player {current_player} wins!")
+                        return
+                    elif is_full(board):
+                        print_board(board)
+                        print("It's a draw!")
+                        return
+                    current_player = 'O' if current_player == 'X' else 'X'
+
+play_tic_tac_toe()
+
+.................................................
+b. N Queens
+
+def print_solution(board):
+    for row in board:
+        print(" ".join("Q" if col else "." for col in row))
+    print()
+
+def is_safe(board, row, col, n):
+    for i in range(row):
+        if board[i][col] == 1: return False
+        if col - (row - i) >= 0 and board[i][col - (row - i)] == 1: return False
+        if col + (row - i) < n and board[i][col + (row - i)] == 1: return False
+    return True
+
+def solve_n_queens(board, row, n):
+    if row == n:
+        print_solution(board)
+        return
+    for col in range(n):
+        if is_safe(board, row, col, n):
+            board[row][col] = 1
+            solve_n_queens(board, row + 1, n)
+            board[row][col] = 0
+
+def n_queens(n):
+    board = [[0] * n for _ in range(n)]
+    solve_n_queens(board, 0, n)
+
+n_queens(4)  # Change the value to solve for different N
+
+.............................................
+c. Magic square
+
+def generate_magic_square(n):
+    if n % 2 == 0:
+        print("Only works for odd numbers!")
+        return
+
+    magic_square = [[0] * n for _ in range(n)]
+
+    num = 1
+    i, j = 0, n // 2  # Start at middle of top row
+
+    while num <= n * n:
+        magic_square[i][j] = num
+        num += 1
+
+        new_i = (i - 1) % n
+        new_j = (j + 1) % n
+
+        if magic_square[new_i][new_j]:  # Already filled
+            i = (i + 1) % n
+        else:
+            i, j = new_i, new_j
+
+    return magic_square
+
+def print_magic_square(square):
+    n = len(square)
+    for row in square:
+        print(" ".join(f"{num:2d}" for num in row))
+    print(f"Magic constant: {n * (n**2 + 1) // 2}")
+
+# Example usage:
+n = 3  # Must be odd
+magic = generate_magic_square(n)
+print_magic_square(magic)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+2 Implement the Water Jug problem using the
+following uninformed search strategies:
+a. Depth First Search
+
+def water_jug_dfs(max_a, max_b, target):
+    visited = set()  # To keep track of visited states
+    path = []        # To record the solution path
+
+    def dfs(a, b):
+        # Base case: target reached
+        if a == target or b == target:
+            path.append((a, b))
+            return True
+        
+        # Skip if state already visited
+        if (a, b) in visited:
+            return False
+        
+        visited.add((a, b))
+        path.append((a, b))
+
+        # Try all possible operations:
+        # 1. Fill Jug A
+        if a < max_a and dfs(max_a, b):
+            return True
+        # 2. Fill Jug B
+        if b < max_b and dfs(a, max_b):
+            return True
+        # 3. Empty Jug A
+        if a > 0 and dfs(0, b):
+            return True
+        # 4. Empty Jug B
+        if b > 0 and dfs(a, 0):
+            return True
+        # 5. Pour from A to B
+        if a > 0 and b < max_b:
+            pour = min(a, max_b - b)
+            if dfs(a - pour, b + pour):
+                return True
+        # 6. Pour from B to A
+        if b > 0 and a < max_a:
+            pour = min(b, max_a - a)
+            if dfs(a + pour, b - pour):
+                return True
+        
+        # Backtrack if no solution found from this state
+        path.pop()
+        return False
+
+    # Start DFS from (0, 0)
+    if dfs(0, 0):
+        print("Solution Path:")
+        for state in path:
+            print(f"Jug A: {state[0]}L, Jug B: {state[1]}L")
+    else:
+        print("No solution exists.")
+
+# Example usage:
+water_jug_dfs(max_a=5, max_b=4, target=2)
+
+....................................................
+
+b. Breadth First Search
+
+from collections import deque
+
+# Jug capacities
+MAX_A = 5
+MAX_B = 3
+goal = 2
+
+def is_goal(state):
+    a, b = state
+    return a == goal or b == goal
+
+def bfs():
+    visited = set()
+    queue = deque()
+    
+    # Each item: (a, b), path
+    queue.append(((0, 0), []))
+    
+    while queue:
+        (a, b), path = queue.popleft()
+
+        if (a, b) in visited:
+            continue
+        visited.add((a, b))
+
+        path = path + [(a, b)]
+        print(f"Visiting: Jug A: {a}L, Jug B: {b}L")
+
+        if is_goal((a, b)):
+            print("\nReached goal!")
+            for step in path:
+                print(f"-> A: {step[0]}L, B: {step[1]}L")
+            return True
+
+        # Possible next states
+        next_states = [
+            (MAX_A, b),         # Fill A
+            (a, MAX_B),         # Fill B
+            (0, b),             # Empty A
+            (a, 0),             # Empty B
+            (a - min(a, MAX_B - b), b + min(a, MAX_B - b)),  # Pour A → B
+            (a + min(b, MAX_A - a), b - min(b, MAX_A - a))   # Pour B → A
+        ]
+
+        for state in next_states:
+            if state not in visited:
+                queue.append((state, path))
+
+    print("No solution found.")
+    return False
+
+# Run BFS
+bfs()
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+3 Implement the Hill Climbing technique to solve the
+8 puzzle problem.
+
+class State:
+    goal_state: 'State | None' = None
+
+    def __init__(self, state, parent=None):
+        self.state = tuple(state)
+        self.parent = parent
+        self.cost = self.calculate_cost()
+
+    @staticmethod
+    def distance(a, b):
+        """Calculate Manhattan distance between two positions"""
+        return abs(a // 3 - b // 3) + abs(a % 3 - b % 3)
+
+    def calculate_cost(self):
+        """Calculate total Manhattan distance for all tiles"""
+        if not self.goal_state:
+            return 0
+        total = 0
+        for i, val in enumerate(self.goal_state.state):
+            if val != 0:  # Skip the blank tile
+                try:
+                    current_pos = self.state.index(val)
+                    total += self.distance(current_pos, i)
+                except ValueError:
+                    # Handle case where tile is missing (shouldn't happen for valid puzzles)
+                    pass
+        return total
+
+    def __repr__(self):
+        """Pretty-print the puzzle state"""
+        s = " ".join(map(str, self.state)).replace("0", ".")
+        return f"{s[:5]}\n{s[6:11]}\n{s[12:]}"
+
+    def swap(self, a, b):
+        """Swap two tiles and return new State"""
+        new_state = list(self.state)
+        new_state[a], new_state[b] = new_state[b], new_state[a]
+        return State(new_state, self)
+
+    def generate_neighbors(self):
+        """Generate all possible next states by moving the blank tile"""
+        gap = self.state.index(0)
+        neighbors = []
+        
+        # Generate moves in consistent order (up, down, left, right)
+        if gap > 2:  # Can move up
+            neighbors.append(self.swap(gap, gap - 3))
+        if gap < 6:  # Can move down
+            neighbors.append(self.swap(gap, gap + 3))
+        if gap % 3 > 0:  # Can move left
+            neighbors.append(self.swap(gap, gap - 1))
+        if gap % 3 < 2:  # Can move right
+            neighbors.append(self.swap(gap, gap + 1))
+            
+        return neighbors
+
+    def __hash__(self):
+        return hash(self.state)
+
+    def __eq__(self, other):
+        return self.state == other.state
+
+
+def hill_climbing(current_state, max_steps=1000):
+    """Hill climbing algorithm with cycle detection and step limit"""
+    path = [current_state]
+    visited = set([current_state])
+    
+    for _ in range(max_steps):
+        if current_state.cost == 0:
+            break  # Goal reached
+            
+        neighbors = current_state.generate_neighbors()
+        if not neighbors:
+            break  # No moves available
+            
+        # Filter out already visited states
+        neighbors = [n for n in neighbors if n not in visited]
+        if not neighbors:
+            break  # All moves lead to visited states
+            
+        # Find the best neighbor (lowest cost)
+        best_neighbor = min(neighbors, key=lambda x: x.cost)
+        
+        if best_neighbor.cost >= current_state.cost:
+            break  # Local minimum reached
+            
+        # Move to the best neighbor
+        current_state = best_neighbor
+        path.append(current_state)
+        visited.add(current_state)
+    
+    return path
+
+
+if __name__ == "__main__":
+    # Set the goal state
+    State.goal_state = State((1, 2, 3, 8, 0, 4, 7, 6, 5))
+    
+    # Define starting state
+    start = State((2, 8, 3, 1, 6, 4, 7, 0, 5))
+    
+    # Run hill climbing
+    solution_path = hill_climbing(start)
+    
+    # Print the solution path
+    for step, state in enumerate(solution_path):
+        print(f"Step {step} (Cost: {state.cost}):")
+        print(state)
+        print("-----")
+    
+    # Check if goal was reached
+    if solution_path[-1].cost == 0:
+        print(f"Solution found in {len(solution_path)-1} moves!")
+    else:
+        print("Stuck in local minimum.")
+        print(f"Best achieved cost: {solution_path[-1].cost}")
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+4 Implement the Best First Search to solve the
+following problems:
+a. 8 puzzle
+
+import heapq
+from copy import deepcopy
+
+# Goal state
+GOAL = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 0]
+]
+
+# Moves: Left, Right, Up, Down
+dx = [0, 0, -1, 1]
+dy = [-1, 1, 0, 0]
+
+class Node:
+    def __init__(self, puzzle, x, y, depth, parent, heuristic):
+        self.puzzle = puzzle
+        self.x = x  # Blank tile row
+        self.y = y  # Blank tile column
+        self.depth = depth
+        self.parent = parent
+        self.heuristic = heuristic
+
+    # Required for heapq to compare nodes
+    def __lt__(self, other):
+        return self.heuristic < other.heuristic
+
+def manhattan_distance(puzzle):
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            if puzzle[i][j] != 0:
+                goal_row = (puzzle[i][j] - 1) // 3
+                goal_col = (puzzle[i][j] - 1) % 3
+                distance += abs(i - goal_row) + abs(j - goal_col)
+    return distance
+
+def best_first_search(start, x, y):
+    heap = []
+    initial_heuristic = manhattan_distance(start)
+    root = Node(start, x, y, 0, None, initial_heuristic)
+    heapq.heappush(heap, root)
+
+    visited = set()
+
+    while heap:
+        current = heapq.heappop(heap)
+        puzzle_tuple = tuple(tuple(row) for row in current.puzzle)
+
+        if puzzle_tuple in visited:
+            continue
+        visited.add(puzzle_tuple)
+
+        if current.puzzle == GOAL:
+            print(f"Solution found at depth: {current.depth}")
+            print_solution(current)
+            return True
+
+        for i in range(4):
+            new_x = current.x + dx[i]
+            new_y = current.y + dy[i]
+
+            if 0 <= new_x < 3 and 0 <= new_y < 3:
+                new_puzzle = deepcopy(current.puzzle)
+                new_puzzle[current.x][current.y], new_puzzle[new_x][new_y] = new_puzzle[new_x][new_y], new_puzzle[current.x][current.y]
+                heuristic = manhattan_distance(new_puzzle)
+                child = Node(new_puzzle, new_x, new_y, current.depth + 1, current, heuristic)
+                heapq.heappush(heap, child)
+
+    return False
+
+def print_solution(node):
+    if node is None:
+        return
+    print_solution(node.parent)
+    for row in node.puzzle:
+        print(" ".join(str(cell) for cell in row))
+    print()
+
+if __name__ == "__main__":
+    start = [
+        [1, 2, 3],
+        [0, 4, 6],
+        [7, 5, 8]
+    ]
+
+    # Find initial blank (0) position
+    x, y = next((i, j) for i in range(3) for j in range(3) if start[i][j] == 0)
+
+    if not best_first_search(start, x, y):
+        print("No solution found!")
+
+............................................................
+
+b. Robot Navigation problem
+
+import heapq
+
+def best_first_search(grid, start, goal):
+    """
+    Solves robot navigation using Best-First Search with Manhattan distance heuristic
+    :param grid: 2D list representing the map (0 = free, 1 = obstacle)
+    :param start: (row, col) starting position
+    :param goal: (row, col) target position
+    :return: path as list of positions or None if no path exists
+    """
+    # Directions: up, down, left, right (and optionally diagonals)
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    
+    # Priority queue: (heuristic, row, col, path)
+    heap = []
+    heapq.heappush(heap, (0, start[0], start[1], [start]))
+    
+    visited = set()
+    visited.add(start)
+    
+    while heap:
+        _, row, col, path = heapq.heappop(heap)
+        
+        # Check if current position is the goal
+        if (row, col) == goal:
+            return path
+        
+        # Explore neighbors
+        for dr, dc in directions:
+            r, c = row + dr, col + dc
+            
+            # Check boundaries and obstacles
+            if (0 <= r < len(grid) and 0 <= c < len(grid[0]) 
+                and grid[r][c] == 0 and (r, c) not in visited):
+                
+                # Calculate Manhattan distance heuristic
+                heuristic = abs(r - goal[0]) + abs(c - goal[1])
+                
+                heapq.heappush(heap, (heuristic, r, c, path + [(r, c)]))
+                visited.add((r, c))
+    
+    return None  # No path found
+
+# Example usage:
+if __name__ == "__main__":
+    # 0 = free path, 1 = obstacle
+    grid = [
+        [0, 0, 1, 0, 0],
+        [1, 0, 1, 0, 1],
+        [0, 0, 0, 1, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0]
+    ]
+    
+    start = (0, 0)  # Top-left corner
+    goal = (4, 4)    # Bottom-right corner
+    
+    path = best_first_search(grid, start, goal)
+    
+    if path:
+        print("Path found:")
+        for step in path:
+            print(step)
+    else:
+        print("No path exists")
+        
+...................................................................................
+
+c. Cities Distance (shortest path) problem
+
+import heapq
+
+class CityGraph:
+    def __init__(self):
+        self.graph = {}         # city -> [(neighbor, distance)]
+        self.heuristic = {}     # city -> estimated distance to goal
+
+    def add_edge(self, city1, city2, distance):
+        self.graph.setdefault(city1, []).append((city2, distance))
+        self.graph.setdefault(city2, []).append((city1, distance))
+
+    def set_heuristic(self, city, value):
+        self.heuristic[city] = value
+
+    def best_first_search(self, start, goal):
+        visited = set()
+        # (heuristic, current_city, path, path_cost)
+        heap = [(self.heuristic.get(start, float('inf')), start, [start], 0)]
+
+        while heap:
+            _, current, path, cost = heapq.heappop(heap)
+
+            if current == goal:
+                return path, cost
+
+            if current in visited:
+                continue
+            visited.add(current)
+
+            for neighbor, distance in self.graph.get(current, []):
+                if neighbor not in visited:
+                    new_cost = cost + distance
+                    heapq.heappush(
+                        heap, 
+                        (self.heuristic.get(neighbor, float('inf')),
+                         neighbor,
+                         path + [neighbor],
+                         new_cost)
+                    )
+
+        return None, float('inf')  # No path found
+
+# -------------------------------------
+# Example Usage
+# -------------------------------------
+if __name__ == "__main__":
+    graph = CityGraph()
+
+    # Define city connections
+    graph.add_edge("A", "B", 5)
+    graph.add_edge("A", "C", 10)
+    graph.add_edge("B", "D", 3)
+    graph.add_edge("C", "D", 2)
+    graph.add_edge("D", "E", 4)
+    graph.add_edge("B", "E", 9)
+
+    # Set heuristic values (straight-line estimates)
+    graph.set_heuristic("A", 10)
+    graph.set_heuristic("B", 6)
+    graph.set_heuristic("C", 5)
+    graph.set_heuristic("D", 2)
+    graph.set_heuristic("E", 0)
+
+    # Find path from A to E
+    path, total_distance = graph.best_first_search("A", "E")
+
+    if path:
+        print("Best-First Search path:")
+        print(" → ".join(path))
+        print(f"Total distance: {total_distance} km")
+    else:
+        print("No path found")
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+5 Implement the A* algorithm to solve the following
+problems:
+a. 8 puzzle
+
+import heapq
+
+class PuzzleState:
+    def __init__(self, board, parent, move, depth, cost):
+        self.board = board
+        self.parent = parent
+        self.move = move
+        self.depth = depth
+        self.cost = cost  # f(n) = g(n) + h(n)
+        self.blank_pos = board.index(0)  # Cache blank position
+
+    def __lt__(self, other):
+        return self.cost < other.cost
+
+def print_board(board):
+    for i in range(0, 9, 3):
+        print(board[i], board[i+1], board[i+2])
+    print()
+
+goal_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+moves = {
+    'Up': -3,
+    'Down': 3,
+    'Left': -1,
+    'Right': 1
+}
+
+def heuristic(board):
+    distance = 0
+    for i in range(9):
+        if board[i] != 0:
+            x1, y1 = divmod(i, 3)
+            x2, y2 = divmod(board[i] - 1, 3)
+            distance += abs(x1 - x2) + abs(y1 - y2)
+    return distance
+
+def is_solvable(board):
+    inversions = 0
+    for i in range(len(board)):
+        for j in range(i + 1, len(board)):
+            if board[i] != 0 and board[j] != 0 and board[i] > board[j]:
+                inversions += 1
+    return inversions % 2 == 0
+
+def a_star(start_state):
+    if not is_solvable(start_state):
+        return None
+
+    open_list = []
+    closed_list = set()
+    heapq.heappush(open_list, PuzzleState(start_state, None, None, 0, heuristic(start_state)))
+
+    while open_list:
+        current_state = heapq.heappop(open_list)
+
+        if current_state.board == goal_state:
+            return current_state
+
+        closed_list.add(tuple(current_state.board))
+
+        for move, delta in moves.items():
+            if (move == 'Up' and current_state.blank_pos < 3) or \
+               (move == 'Down' and current_state.blank_pos > 5) or \
+               (move == 'Left' and current_state.blank_pos % 3 == 0) or \
+               (move == 'Right' and current_state.blank_pos % 3 == 2):
+                continue
+
+            new_board = current_state.board[:]
+            new_blank_pos = current_state.blank_pos + delta
+            new_board[current_state.blank_pos], new_board[new_blank_pos] = new_board[new_blank_pos], new_board[current_state.blank_pos]
+
+            if tuple(new_board) in closed_list:
+                continue
+
+            new_state = PuzzleState(
+                new_board,
+                current_state,
+                move,
+                current_state.depth + 1,
+                current_state.depth + 1 + heuristic(new_board)
+            )
+            heapq.heappush(open_list, new_state)
+
+    return None
+
+def print_solution(solution):
+    path = []
+    current = solution
+    while current:
+        path.append(current)
+        current = current.parent
+    path.reverse()
+
+    print("Solution Steps:")
+    for i, step in enumerate(path):
+        if step.move:
+            print(f"Step {i}: Move {step.move}")
+        else:
+            print(f"Step {i}: Initial State")
+        print_board(step.board)
+    print(f"Total moves: {len(path)-1}")
+
+initial_state = [1, 2, 3, 4, 0, 5, 6, 7, 8]
+solution = a_star(initial_state)
+
+if solution:
+    print("Solution found!")
+    print_solution(solution)
+else:
+    print("No solution exists.")
+    
+............................................................................
+
+b. Robot Navigation problem
+
+import heapq
+
+def a_star(grid, start, goal):
+    """
+    Solves robot navigation using A* algorithm
+    :param grid: 2D list where 0=free path, 1=obstacle
+    :param start: (row, col) starting position
+    :param goal: (row, col) target position
+    :return: path as list of positions or None if no path exists
+    """
+    # Directions: up, down, left, right
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    
+    # Priority queue: (f_score, row, col, path, g_score)
+    heap = []
+    heapq.heappush(heap, (0, start[0], start[1], [start], 0))
+    
+    visited = set()
+    
+    while heap:
+        _, row, col, path, g = heapq.heappop(heap)
+        
+        if (row, col) == goal:
+            return path
+        
+        if (row, col) in visited:
+            continue
+        visited.add((row, col))
+        
+        for dr, dc in directions:
+            r, c = row + dr, col + dc
+            
+            # Check boundaries and obstacles
+            if 0 <= r < len(grid) and 0 <= c < len(grid[0]) and grid[r][c] == 0:
+                new_g = g + 1
+                # Manhattan distance heuristic
+                h = abs(r - goal[0]) + abs(c - goal[1])
+                heapq.heappush(heap, (new_g + h, r, c, path + [(r, c)], new_g))
+    
+    return None  # No path found
+
+def print_grid(grid, path=None):
+    """Print the grid with optional path visualization"""
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if path and (i, j) in path:
+                print('*', end=' ')
+            elif grid[i][j] == 1:
+                print('1', end=' ')
+            else:
+                print('.', end=' ')
+        print()
+
+# Example usage
+if __name__ == "__main__":
+    # 0 = free path, 1 = obstacle
+    grid = [
+        [0, 0, 0, 1, 0],
+        [1, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0]
+    ]
+    
+    start = (0, 0)  # Top-left corner
+    goal = (4, 4)    # Bottom-right corner
+    
+    path = a_star(grid, start, goal)
+    
+    if path:
+        print("Path found:")
+        print_grid(grid, path)
+        print("\nStep-by-step path:")
+        for step, (r, c) in enumerate(path):
+            print(f"Step {step}: ({r}, {c})")
+    else:
+        print("No path exists")
+.......................................................................................
+
+c. Cities Distance (shortest path) problem
+
+import heapq
+
+def a_star(cities, start, goal, heuristics):
+    """
+    Finds shortest path between cities using A* algorithm
+    :param cities: Dictionary {city: [(neighbor, distance), ...]}
+    :param start: Starting city
+    :param goal: Target city
+    :param heuristics: Dictionary {city: estimated_distance_to_goal}
+    :return: (path, total_distance) or (None, inf) if no path exists
+    """
+    # Priority queue: (f_score, city, path, g_score)
+    heap = [(heuristics[start], start, [start], 0)]
+    visited = set()
+    
+    while heap:
+        f, current, path, g = heapq.heappop(heap)
+        
+        if current == goal:
+            return path, g
+        
+        if current in visited:
+            continue
+        visited.add(current)
+        
+        for neighbor, distance in cities.get(current, []):
+            if neighbor not in visited:
+                new_g = g + distance
+                heapq.heappush(
+                    heap,
+                    (new_g + heuristics[neighbor],  # f = g + h
+                     neighbor,
+                     path + [neighbor],
+                     new_g)
+                )
+    
+    return None, float('inf')
+
+# Example Usage
+if __name__ == "__main__":
+    # City connections (your format)
+    cities = {
+        'A': [('B', 5), ('C', 10)],
+        'B': [('A', 5), ('C', 3), ('D', 2)],
+        'C': [('A', 10), ('B', 3), ('D', 1), ('E', 7)],
+        'D': [('B', 2), ('C', 1), ('E', 2)],
+        'E': [('C', 7), ('D', 2)]
+    }
+
+    # Heuristic (straight-line distance to 'E')
+    heuristics = {
+        'A': 10, 'B': 6, 'C': 5, 
+        'D': 2, 'E': 0  # Goal has heuristic 0
+    }
+
+    start = 'A'
+    goal = 'E'
+    path, distance = a_star(cities, start, goal, heuristics)
+    
+    if path:
+        print(f"Shortest path from {start} to {goal}:")
+        print(" → ".join(path))
+        print(f"Total distance: {distance} km")
+    else:
+        print("No path exists")
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+6 Implement Constraint Satisfaction Algorithm for the
+following problems:
+a. Cryptarithmetic
+
+from itertools import permutations
+
+def solve_cryptarithmetic(puzzle):
+    """
+    Solves cryptarithmetic puzzles like SEND + MORE = MONEY
+    Returns solution in format {'SEND': 9567, 'MORE': 1085, 'MONEY': 10652}
+    """
+    # Extract all unique letters
+    letters = sorted(set(char for word in puzzle for char in word if char.isalpha()))
+    if len(letters) > 10:
+        return None  # Cannot solve with base-10 digits
+    
+    # Split puzzle into left and right of '='
+    left, right = puzzle.split('=')
+    left_terms = [term.strip() for term in left.split('+')]
+    right_term = right.strip()
+    all_terms = left_terms + [right_term]
+    
+    # First letters cannot be zero
+    first_letters = {term[0] for term in all_terms}
+    
+    # Try all possible digit assignments
+    for digits in permutations(range(10), len(letters)):
+        # Skip if any first letter is assigned 0
+        if any(digits[letters.index(letter)] == 0 for letter in first_letters):
+            continue
+        
+        # Create digit mapping
+        mapping = {letters[i]: digit for i, digit in enumerate(digits)}
+        
+        # Evaluate all terms
+        term_values = {}
+        valid = True
+        
+        for term in all_terms:
+            num = 0
+            for char in term:
+                num = num * 10 + mapping[char]
+            term_values[term] = num
+        
+        # Check if equation holds
+        left_sum = sum(term_values[term] for term in left_terms)
+        if left_sum == term_values[right_term]:
+            return term_values
+    
+    return None  # No solution found
+
+# Example usage
+if __name__ == "__main__":
+    puzzle = "NOON + MOON + SOON = JUNE"
+    solution = solve_cryptarithmetic(puzzle)
+    
+    if solution:
+        print("Solution found:")
+        # Get all terms in the original order
+        left, right = puzzle.split('=')
+        terms = [term.strip() for term in left.split('+')] + [right.strip()]
+        
+        # Format the output as requested
+        output = ", ".join(f"{term}: {solution[term]}" for term in terms)
+        print(output)
+    else:
+        print("No solution exists")
+
+.........................................................................................
+b. Crossword puzzle
+def crossword_backtrack(grid, words, idx): 
+    if idx == len(words): 
+        return True 
+    
+    word = words[idx] 
+    for i in range(len(grid)): 
+        for j in range(len(grid[0])): 
+            if can_place_word(grid, word, i, j, 'horizontal'): 
+                placed = place_word(grid, word, i, j, 'horizontal') 
+                if crossword_backtrack(grid, words, idx + 1): 
+                    return True 
+                remove_word(grid, placed) 
+                
+            if can_place_word(grid, word, i, j, 'vertical'): 
+                placed = place_word(grid, word, i, j, 'vertical') 
+                if crossword_backtrack(grid, words, idx + 1): 
+                    return True 
+                remove_word(grid, placed) 
+    return False 
+
+
+def can_place_word(grid, word, x, y, direction): 
+    if direction == 'horizontal': 
+        if y + len(word) > len(grid[0]): 
+            return False 
+        for i in range(len(word)): 
+            if grid[x][y+i] not in ('-', word[i]): 
+                return False 
+    else: 
+        if x + len(word) > len(grid): 
+            return False 
+        for i in range(len(word)): 
+            if grid[x+i][y] not in ('-', word[i]): 
+                return False 
+    return True 
+
+
+def place_word(grid, word, x, y, direction): 
+    placed = [] 
+    for i in range(len(word)): 
+        if direction == 'horizontal': 
+            if grid[x][y+i] == '-': 
+                grid[x][y+i] = word[i] 
+                placed.append((x, y+i)) 
+        else: 
+            if grid[x+i][y] == '-': 
+                grid[x+i][y] = word[i] 
+                placed.append((x+i, y)) 
+    return placed 
+
+
+def remove_word(grid, placed): 
+    for x, y in placed: 
+        grid[x][y] = '-' 
+
+
+# Example usage: 
+grid = [['-' for _ in range(5)] for _ in range(5)] 
+words = ['APPLE', 'LAR'] 
+
+if crossword_backtrack(grid, words, 0): 
+    for row in grid: 
+        print(''.join(row)) 
+else: 
+    print("No solution found.")
+
+..............................................................................
+
+c. Map coloring problem
+def is_valid(state, color, neighbor_map, assignment):
+    for neighbor in neighbor_map[state]:
+        if neighbor in assignment and assignment[neighbor] == color:
+            return False
+    return True
+
+def backtrack(assignment, states, colors, neighbor_map):
+    if len(assignment) == len(states):
+        return assignment
+
+    unassigned = [s for s in states if s not in assignment]
+    state = unassigned[0]
+
+    for color in colors:
+        if is_valid(state, color, neighbor_map, assignment):
+            assignment[state] = color
+            result = backtrack(assignment, states, colors, neighbor_map)
+            if result:
+                return result
+            del assignment[state]
+    return None
+
+states = ['WA', 'NT', 'SA', 'Q', 'NSW', 'V', 'T']
+neighbor_map = {
+    'WA': ['NT', 'SA'],
+    'NT': ['WA', 'SA', 'Q'],
+    'SA': ['WA', 'NT', 'Q', 'NSW', 'V'],
+    'Q': ['NT', 'SA', 'NSW'],
+    'NSW': ['SA', 'Q', 'V'],
+    'V': ['SA', 'NSW'],
+    'T': []
+}
+colors = ['Red', 'Green', 'Blue']
+
+solution = backtrack({}, states, colors, neighbor_map)
+print("Map Coloring Solution:")
+print(solution)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+7 Implement the Minimax algorithm to solve the Tic Tac Toe problem
+
+import math
+board = [[' ' for _ in range(3)] for _ in range(3)]
+def check_winner(board):
+    for i in range(3):
+        if board[i][0] == board[i][1] == board[i][2] != ' ':
+            return board[i][0]
+        if board[0][i] == board[1][i] == board[2][i] != ' ':
+            return board[0][i]
+    if board[0][0] == board[1][1] == board[2][2] != ' ':
+        return board[0][0]
+    if board[0][2] == board[1][1] == board[2][0] != ' ':
+        return board[0][2]
+    return None
+def is_draw(board):
+    return all(cell != ' ' for row in board for cell in row)
+def minimax(board, is_maximizing):
+    winner = check_winner(board)
+    if winner == 'O':
+        return 1
+    elif winner == 'X':
+        return -1
+    elif is_draw(board):
+        return 0
+    if is_maximizing:
+        best_score = -math.inf
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == ' ':
+                    board[i][j] = 'O'
+                    score = minimax(board, False)
+                    board[i][j] = ' '
+                    best_score = max(best_score, score)
+        return best_score
+    else:
+        best_score = math.inf
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == ' ':
+                    board[i][j] = 'X'
+                    score = minimax(board, True)
+                    board[i][j] = ' '
+                    best_score = min(best_score, score)
+        return best_score
+
+def best_move():
+    best_score = -math.inf
+    move = (-1, -1)
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == ' ':
+                board[i][j] = 'O'
+                score = minimax(board, False)
+                board[i][j] = ' '
+                if score > best_score:
+                    best_score = score
+                    move = (i, j)
+    board[move[0]][move[1]] = 'O'
+def print_board():
+    for row in board:
+        print('|'.join(row))
+        print('-' * 5)
+def play_game():
+    print("Welcome to Tic Tac Toe!")
+    print("You are 'X', computer is 'O'.")
+    print_board()
+    while True:
+        row = int(input("Enter row (0-2): "))
+        col = int(input("Enter col (0-2): "))
+        if board[row][col] != ' ':
+            print("Invalid move! Try again.")
+            continue
+        board[row][col] = 'X'
+
+        print_board()
+        if check_winner(board) == 'X':
+            print("You win!")
+            break
+        elif is_draw(board):
+            print("It's a draw!")
+            break
+
+        print("Computer's turn:")
+        best_move()
+        print_board()
+        if check_winner(board) == 'O':
+            print("Computer wins!")
+            break
+        elif is_draw(board):
+            print("It's a draw!")
+            break
+
+play_game()
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+8 NLP
+
+a) pos tagging
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <utility>
+
+int main() {
+    // Sample sentence with missing tags ("??" and "???")
+    std::vector<std::pair<std::string, std::string>> taggedSentence = {
+        {"The", "DT"},
+        {"planet", "NN"},
+        {"Jupiter", "NNP"},
+        {"and", "CC"},
+        {"its", "??"},  // Missing tag (should be "PRP$" or "PPS")
+        {"moons", "NNS"},
+        {"are", "VBP"},
+        {"in", "IN"},
+        {"effect", "???"},  // Missing tag (should be "NN")
+        {"a", "DT"},
+        {"minisolar", "JJ"},
+        {"system", "NN"},
+        {",", ","},
+        {"and", "CC"},
+        {"Jupiter", "NNP"},
+        {"itself", "PRP"},
+        {"is", "VBZ"},
+        {"often", "RB"},
+        {"called", "VBN"},
+        {"a", "DT"},
+        {"star", "NN"},
+        {"that", "IN"},
+        {"never", "RB"},
+        {"caught", "??"},  // Missing tag (should be "VBD")
+        {"fire", "NN"},
+        {".", "."}
+    };
+
+    // Rule structure
+    struct TagRule {
+        std::string prevTag;  // Previous tag (or "" if none)
+        std::string nextTag;  // Next tag (or "" if none)
+        std::string resultTag;
+    };
+
+    // Rules for missing tags
+    std::vector<TagRule> rules = {
+        // Two-letter missing tags ("??")
+        {"PRP", "", "PRP$"},  // "its" → "PRP$"
+        {"VBN", "NN", "VBD"}, // "caught" → "VBD" (past tense)
+        {"DT", "", "JJ"},     // Fallback for adjectives
+        {"", "", "NN"},      // Default fallback for nouns
+
+        // Three-letter missing tags ("???")
+        {"IN", "DT", "NN"},  // "effect" → "NN"
+        {"VBP", "NN", "NNP"},
+        {"IN", "VBN", "PRP$"}
+    };
+
+    // Fill in missing tags
+    for (size_t i = 0; i < taggedSentence.size(); ++i) {
+        if (taggedSentence[i].second == "??" || taggedSentence[i].second == "???") {
+            for (const auto& rule : rules) {
+                bool prevMatch = (rule.prevTag.empty() || 
+                                (i > 0 && taggedSentence[i-1].second == rule.prevTag));
+                bool nextMatch = (rule.nextTag.empty() || 
+                                (i < taggedSentence.size() - 1 && 
+                                 taggedSentence[i+1].second == rule.nextTag));
+
+                if (prevMatch && nextMatch) {
+                    taggedSentence[i].second = rule.resultTag;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Print the tagged sentence
+    for (const auto& token : taggedSentence) {
+        std::cout << token.first << "/" << token.second << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+import nltk
+from nltk import word_tokenize, pos_tag
+
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+
+def pos_tagging(sentence):
+    tokens = word_tokenize(sentence)
+    tagged = pos_tag(tokens)
+    return tagged
+
+# Example usage
+sentence = "The quick brown fox jumps over the lazy dog"
+print("POS Tags:", pos_tagging(sentence))
+
+...............................................................
+b) similarity score
+
+import math
+from collections import Counter
+
+# Documents (lowercased and tokenized)
+d = [
+    'An apple a day keeps the doctor away'.lower().split(),
+    'Never compare an apple to an orange'.lower().split(),
+    'I prefer scikit-learn to orange'.lower().split()
+]
+compDoc = "I'd like an apple and a doctor".lower().split()
+
+# Get all unique terms
+terms = set()
+for doc in d + [compDoc]:
+    terms.update(doc)
+
+# Compute TF (term frequency) for all docs
+tf = []
+for doc in d + [compDoc]:
+    word_counts = Counter(doc)
+    tf.append({word: count/len(doc) for word, count in word_counts.items()})
+
+# Compute IDF (inverse document frequency)
+idf = {}
+for term in terms:
+    doc_count = sum(1 for doc in d if term in doc)
+    idf[term] = 1 + math.log((len(d) + 1) / (doc_count + 1))  # Smoothed
+
+# Compute TF-IDF vectors
+tfidf_vectors = []
+for doc_tf in tf:
+    vec = [doc_tf.get(term, 0) * idf.get(term, 0) for term in terms]
+    tfidf_vectors.append(vec)
+
+# Calculate cosine similarities between compDoc (last vec) and others
+def cosine_sim(vec1, vec2):
+    dot = sum(a*b for a,b in zip(vec1, vec2))
+    norm1 = math.sqrt(sum(a*a for a in vec1))
+    norm2 = math.sqrt(sum(a*a for a in vec2))
+    return dot / (norm1 * norm2) if norm1 * norm2 != 0 else 0
+
+similarities = [cosine_sim(tfidf_vectors[-1], vec) for vec in tfidf_vectors[:-1]]
+
+print("Cosine Similarities:", similarities)
+print(f"Most similar document: {similarities.index(max(similarities)) + 1}")
+...............................................................
+c) spell checker
+
+import re
+from collections import Counter
+from string import ascii_lowercase
+
+# Expanded corpus
+corpus_text = """
+the of and to in is that it was for you he be with on as I his they at are have 
+this not but had by from she or we an there her were will would do been their has 
+more if no when what so up out them can who me about some could into its only now 
+other new your which time these two may then do down should because each any those
+spelling correct university college semester education algorithm implementation
+""".lower()
+
+def words(text):
+    return re.findall(r"[a-z]+(?:'[a-z]+)?", text.lower())
+
+def create_vocabulary():
+    return Counter(words(corpus_text))
+
+def edits1(word):
+    splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
+    deletes = [L + R[1:] for L, R in splits if R]
+    transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
+    replaces = [L + c + R[1:] for L, R in splits if R for c in ascii_lowercase]
+    inserts = [L + c + R for L, R in splits for c in ascii_lowercase]
+    return set(deletes + transposes + replaces + inserts)
+
+def known(words, vocab):
+    return set(w for w in words if w in vocab)
+
+def edits2(word):
+    return (e2 for e1 in edits1(word) for e2 in edits1(e1))
+
+def spell_check(word, vocab):
+    if word in vocab:
+        return word
+    
+    # Try 1-edit candidates first
+    candidates = known(edits1(word), vocab)
+    if candidates:
+        return max(candidates, key=lambda w: vocab[w])
+    
+    # Then try 2-edit candidates
+    candidates = known(edits2(word), vocab)
+    if candidates:
+        return max(candidates, key=lambda w: vocab[w])
+    
+    return word
+
+Vocabulary = create_vocabulary()
+
+# Test cases
+test_words = ["thiss", "wass", "speling", "korrect"]
+for word in test_words:
+    print(f"{word} → {spell_check(word, Vocabulary)}")
